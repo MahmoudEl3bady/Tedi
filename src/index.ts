@@ -20,3 +20,13 @@ stdin.on("data", (data) => {
   if (char === "\x03") process.exit(0); // Ctrl+C
   inputHandler.handle(char);
 });
+
+export function debounce(fn: any, time: any) {
+  let timer: any;
+  return function () {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn.apply(this, arguments);
+    }, time);
+  };
+}

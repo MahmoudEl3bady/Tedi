@@ -1,4 +1,5 @@
 import type EditorState from "./EditorState.js";
+import { debounce } from "./index.js";
 import type { Renderer } from "./renderer.js";
 import type { UndoManager } from "./undo.js";
 
@@ -6,7 +7,11 @@ export class InputHandler {
   constructor(
     private editor: EditorState,
     private undoManager: UndoManager,
-    private renderer: Renderer
+    private renderer: Renderer,
+    private debouncedSave = debounce(
+      () => this.undoManager.save(this.editor),
+      500
+    )
   ) {}
 
   handle(char: string) {
@@ -26,7 +31,7 @@ export class InputHandler {
     } else if (char.charCodeAt(0) >= 32 && char.charCodeAt(0) < 127) {
       this.editor.insertChar(char);
       // TODO: save a snapshot every 1 second
-      this.undoManager.save(this.editor);
+      this.debouncedSave();
     }
 
     this.renderer.render(this.editor);
