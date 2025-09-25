@@ -1,7 +1,7 @@
 import type EditorState from "./EditorState.js";
-import { debounce } from "./index.js";
 import type { Renderer } from "./renderer.js";
 import type { UndoManager } from "./undo.js";
+import { debounce } from "./untils/utils.js";
 
 export class InputHandler {
   constructor(
@@ -30,7 +30,7 @@ export class InputHandler {
       keyBindings[char]!();
     } else if (char.charCodeAt(0) >= 32 && char.charCodeAt(0) < 127) {
       this.editor.insertChar(char);
-      // TODO: save a snapshot every 1 second
+      console.log(this.undoManager);
       this.debouncedSave();
     }
 

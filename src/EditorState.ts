@@ -3,6 +3,10 @@ export default class EditorState {
   private cursorX = 0;
   private cursorY = 0;
 
+  constructor(lines: string[]) {
+    this.lines = lines;
+  }
+
   get snapshot() {
     return {
       lines: [...this.lines],

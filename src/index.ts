@@ -3,8 +3,27 @@ import EditorState from "./EditorState.js";
 import { UndoManager } from "./undo.js";
 import { Renderer } from "./renderer.js";
 import { InputHandler } from "./inputHandler.js";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import fs from "node:fs";
+import { argv } from "node:process";
+import readline from "readline";
 
-const editor = new EditorState();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const openedFile = argv[2];
+const filePath = `${__dirname}/${openedFile}`;
+const fileLines: string[] = [];
+
+const r1 = readline.createInterface({
+  input: fs.createReadStream(filePath),
+  crlfDelay: Infinity,
+});
+
+r1.on("line", (line) => {
+  fileLines.push(line);
+});
+
+const editor = new EditorState(fileLines);
 const undoManager = new UndoManager();
 const renderer = new Renderer();
 const inputHandler = new InputHandler(editor, undoManager, renderer);
@@ -20,13 +39,3 @@ stdin.on("data", (data) => {
   if (char === "\x03") process.exit(0); // Ctrl+C
   inputHandler.handle(char);
 });
-
-export function debounce(fn: any, time: any) {
-  let timer: any;
-  return function () {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      fn.apply(this, arguments);
-    }, time);
-  };
-}
