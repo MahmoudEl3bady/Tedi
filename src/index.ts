@@ -5,6 +5,7 @@ import { Renderer } from "./renderer.js";
 import { InputHandler } from "./inputHandler.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import { opendir } from "node:fs/promises";
 import fs from "node:fs";
 import { argv } from "node:process";
 import readline from "readline";
@@ -12,18 +13,32 @@ import readline from "readline";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const openedFile = argv[2];
 const filePath = `${__dirname}/${openedFile}`;
-const fileLines: string[] = [];
+let fileLines: string[] = [];
 
-const r1 = readline.createInterface({
-  input: fs.createReadStream(filePath),
-  crlfDelay: Infinity,
-});
+const isFileExists = async (dirname: string) => {
+  const dir = await opendir(dirname);
+  for await (const dirent of dir) {
+    if (dirent.name === openedFile) {
+      return true;
+    }
+  }
+  return false;
+};
 
-r1.on("line", (line) => {
-  fileLines.push(line);
-});
+if (openedFile && (await isFileExists(__dirname))) {
+  const r1 = readline.createInterface({
+    input: fs.createReadStream(filePath),
+    crlfDelay: Infinity,
+  });
 
-const editor = new EditorState(fileLines);
+  r1.on("line", (line) => {
+    fileLines.push(line);
+  });
+} else {
+  fileLines = [""];
+}
+
+const editor = new EditorState(fileLines, filePath);
 const undoManager = new UndoManager();
 const renderer = new Renderer();
 const inputHandler = new InputHandler(editor, undoManager, renderer);

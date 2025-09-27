@@ -1,7 +1,7 @@
 import type EditorState from "./EditorState.js";
 import type { Renderer } from "./renderer.js";
 import type { UndoManager } from "./undo.js";
-import { debounce } from "./untils/utils.js";
+import { debounce } from "./utilities/utils.js";
 
 export class InputHandler {
   constructor(
@@ -20,6 +20,7 @@ export class InputHandler {
       "\x7F": () => this.editor.deleteChar(),
       "\x1A": () => this.undoManager.undo(this.editor), // Ctrl+Z
       "\x19": () => this.undoManager.redo(this.editor), // Ctrl+Y
+      "\x13": () => this.editor.saveSnapshot(this.editor.getFilePath()),
       "\x1B[A": () => this.editor.moveCursor("up"),
       "\x1B[B": () => this.editor.moveCursor("down"),
       "\x1B[C": () => this.editor.moveCursor("right"),

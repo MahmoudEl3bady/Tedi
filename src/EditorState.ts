@@ -1,10 +1,18 @@
+import { writeFileLineByLine } from "./utilities/utils.js";
+
 export default class EditorState {
   private lines: string[] = [""];
-  private cursorX = 0;
-  private cursorY = 0;
+  private cursorX: number;
+  private cursorY: number;
+  private filePath: string = "";
 
-  constructor(lines: string[]) {
+  constructor(lines: string[], filePath?: string) {
     this.lines = lines;
+    this.cursorX = 0;
+    this.cursorY = 0;
+    if (filePath) {
+      this.filePath = filePath;
+    }
   }
 
   get snapshot() {
@@ -14,7 +22,9 @@ export default class EditorState {
       cursorY: this.cursorY,
     };
   }
-
+  getFilePath() {
+    return this.filePath;
+  }
   restore(snapshot: { lines: string[]; cursorX: number; cursorY: number }) {
     const { lines, cursorX, cursorY } = snapshot;
     this.lines = [...lines];
@@ -89,6 +99,11 @@ export default class EditorState {
         }
         break;
     }
+  }
+
+  saveSnapshot(filePath: string) {
+    // TODO: use terminal-kit for alerts and toast messages.
+    writeFileLineByLine(filePath, this.lines);
   }
 
   getLines() {
