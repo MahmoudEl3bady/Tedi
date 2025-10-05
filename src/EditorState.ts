@@ -1,17 +1,20 @@
 import { writeFileLineByLine } from "./utilities/utils.js";
+import * as readline from "node:readline";
+import { stdin as input, stdout as output } from "node:process";
+import { argv } from "node:process";
 
 export default class EditorState {
   private lines: string[] = [""];
   private cursorX: number;
   private cursorY: number;
-  private filePath: string = "";
+  private currentDir: string = "";
 
-  constructor(lines: string[], filePath?: string) {
+  constructor(lines: string[], currentDir?: string) {
     this.lines = lines;
     this.cursorX = 0;
     this.cursorY = 0;
-    if (filePath) {
-      this.filePath = filePath;
+    if (currentDir) {
+      this.currentDir = currentDir;
     }
   }
 
@@ -22,9 +25,7 @@ export default class EditorState {
       cursorY: this.cursorY,
     };
   }
-  getFilePath() {
-    return this.filePath;
-  }
+
   restore(snapshot: { lines: string[]; cursorX: number; cursorY: number }) {
     const { lines, cursorX, cursorY } = snapshot;
     this.lines = [...lines];
@@ -101,11 +102,21 @@ export default class EditorState {
     }
   }
 
-  saveSnapshot(filePath: string) {
+  saveSnapshot(currentDir: string) {
     // TODO: use terminal-kit for alerts and toast messages.
+    let filePath: string;
+    let answer; // TODO: Came from prompt component!
+    const openedFile = argv[2];
+    if (openedFile) {
+      filePath = `${currentDir}/${openedFile}`;
+    } else {
+      filePath = `${currentDir}/untitled`;
+    }
     writeFileLineByLine(filePath, this.lines);
   }
-
+  getCurrentDir() {
+    return this.currentDir;
+  }
   getLines() {
     return this.lines;
   }

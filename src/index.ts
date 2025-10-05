@@ -38,7 +38,7 @@ if (openedFile && (await isFileExists(__dirname))) {
   fileLines = [""];
 }
 
-const editor = new EditorState(fileLines, filePath);
+const editor = new EditorState(fileLines, __dirname);
 const undoManager = new UndoManager();
 const renderer = new Renderer();
 const inputHandler = new InputHandler(editor, undoManager, renderer);
