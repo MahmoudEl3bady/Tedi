@@ -39,6 +39,7 @@ export default class EditorState {
       line?.slice(0, this.cursorX) + char + line?.slice(this.cursorX);
     this.cursorX++;
   }
+
   deleteChar() {
     if (this.cursorX > 0) {
       const line = this.lines[this.cursorY] as string;
@@ -122,5 +123,10 @@ export default class EditorState {
   }
   getCursor() {
     return { x: this.cursorX, y: this.cursorY };
+  }
+
+  addTabSpace() {
+    this.lines[this.cursorY] += "   ";
+    this.cursorX += 3;
   }
 }

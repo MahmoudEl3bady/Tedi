@@ -17,6 +17,7 @@ export class InputHandler {
   handle(char: string) {
     const keyBindings: Record<string, () => void> = {
       "\r": () => this.editor.insertNewLine(),
+      "\t": () => this.editor.addTabSpace(),
       "\x7F": () => this.editor.deleteChar(),
       "\x1A": () => this.undoManager.undo(this.editor), // Ctrl+Z
       "\x19": () => this.undoManager.redo(this.editor), // Ctrl+Y
@@ -31,7 +32,6 @@ export class InputHandler {
       keyBindings[char]!();
     } else if (char.charCodeAt(0) >= 32 && char.charCodeAt(0) < 127) {
       this.editor.insertChar(char);
-      console.log(this.undoManager);
       this.debouncedSave();
     }
 
