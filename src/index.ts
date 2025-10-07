@@ -9,6 +9,7 @@ import { opendir } from "node:fs/promises";
 import fs from "node:fs";
 import { argv } from "node:process";
 import readline from "readline";
+import { getFilename } from "./utilities/utils.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const openedFile = argv[2];
@@ -46,7 +47,6 @@ const inputHandler = new InputHandler(editor, undoManager, renderer);
 stdin.setRawMode(true);
 stdin.resume();
 stdin.setEncoding("utf8");
-
 renderer.render(editor);
 
 stdin.on("data", (data) => {

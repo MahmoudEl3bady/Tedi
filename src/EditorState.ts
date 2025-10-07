@@ -1,13 +1,14 @@
-import { writeFileLineByLine } from "./utilities/utils.js";
+import { getFilename, writeFileLineByLine } from "./utilities/utils.js";
 import * as readline from "node:readline";
 import { stdin as input, stdout as output } from "node:process";
 import { argv } from "node:process";
-
+import path from "node:path";
 export default class EditorState {
   private lines: string[] = [""];
   private cursorX: number;
   private cursorY: number;
   private currentDir: string = "";
+  private fileName: string = "";
 
   constructor(lines: string[], currentDir?: string) {
     this.lines = lines;
@@ -103,17 +104,37 @@ export default class EditorState {
     }
   }
 
-  saveSnapshot(currentDir: string) {
-    // TODO: use terminal-kit for alerts and toast messages.
+  async saveSnapshot(currentDir: string) {
     let filePath: string;
-    let answer; // TODO: Came from prompt component!
-    const openedFile = argv[2];
-    if (openedFile) {
-      filePath = `${currentDir}/${openedFile}`;
-    } else {
-      filePath = `${currentDir}/untitled`;
+
+    if (argv[2]) {
+      this.fileName = argv[2];
     }
-    writeFileLineByLine(filePath, this.lines);
+
+    if (!this.fileName) {
+      this.fileName = await getFilename();
+    }
+    filePath = path.join(currentDir, this.fileName);
+
+    try {
+      writeFileLineByLine(filePath, this.lines);
+
+      const rows = process.stdout.rows || 24;
+      process.stdout.write(`\x1b[${rows};1H\x1b[2K`);
+      process.stdout.write(
+        `\x1b[32m✓ Saved to ${path.basename(filePath)}\x1b[0m`
+      );
+
+      setTimeout(() => {
+        process.stdout.write(`\x1b[${rows};1H\x1b[2K`);
+      }, 2000);
+    } catch (error) {
+      const rows = process.stdout.rows || 24;
+      process.stdout.write(`\x1b[${rows};1H\x1b[2K`);
+      process.stdout.write(
+        `\x1b[31m✗ Error saving file: ${(error as Error).message}\x1b[0m`
+      );
+    }
   }
   getCurrentDir() {
     return this.currentDir;
