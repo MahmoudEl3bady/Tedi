@@ -1,4 +1,3 @@
-// renderer.ts
 import { stdout } from "node:process";
 import { styleText } from "node:util";
 import EditorState from "./EditorState.js";
@@ -12,14 +11,12 @@ export class Renderer {
     // Save cursor position (in case we're rendering during filename prompt)
     stdout.write("\x1b[s");
 
-    // Clear screen but DON'T use \x1Bc (full reset)
     // Instead, clear manually to preserve bottom line
-    stdout.write("\x1b[H"); // Move to home
+    stdout.write("\x1b[H");
 
-    // Clear only the editor area (not the bottom line)
-    const maxLines = rows - 1; // Leave bottom line for prompts
+    const maxLines = rows - 1;
     for (let i = 0; i < maxLines; i++) {
-      stdout.write("\x1b[2K"); // Clear current line
+      stdout.write("\x1b[2K");
       if (i < maxLines - 1) stdout.write("\n");
     }
 

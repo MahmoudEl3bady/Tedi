@@ -9,7 +9,8 @@ import { opendir } from "node:fs/promises";
 import fs from "node:fs";
 import { argv } from "node:process";
 import readline from "readline";
-import { getFilename } from "./utilities/utils.js";
+
+const renderer = new Renderer();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const openedFile = argv[2];
@@ -34,14 +35,13 @@ if (openedFile && (await isFileExists(__dirname))) {
 
   r1.on("line", (line) => {
     fileLines.push(line);
+    renderer.render(editor);
   });
 } else {
   fileLines = [""];
 }
-
 const editor = new EditorState(fileLines, __dirname);
 const undoManager = new UndoManager();
-const renderer = new Renderer();
 const inputHandler = new InputHandler(editor, undoManager, renderer);
 
 stdin.setRawMode(true);
