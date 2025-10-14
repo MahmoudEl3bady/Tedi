@@ -1,14 +1,14 @@
 import { getFilename, writeFileLineByLine } from "./utilities/utils.js";
-import * as readline from "node:readline";
-import { stdin as input, stdout as output } from "node:process";
 import { argv } from "node:process";
 import path from "node:path";
+
 export default class EditorState {
   private lines: string[] = [""];
   private cursorX: number;
   private cursorY: number;
   private currentDir: string = "";
   private fileName: string = "";
+  private viewportStart: number = 0;
 
   constructor(lines: string[], currentDir?: string) {
     this.lines = lines;
@@ -24,14 +24,51 @@ export default class EditorState {
       lines: [...this.lines],
       cursorX: this.cursorX,
       cursorY: this.cursorY,
+      viewportStart: this.viewportStart,
     };
   }
 
-  restore(snapshot: { lines: string[]; cursorX: number; cursorY: number }) {
-    const { lines, cursorX, cursorY } = snapshot;
+  restore(snapshot: {
+    lines: string[];
+    cursorX: number;
+    cursorY: number;
+    viewportStart?: number;
+  }) {
+    const { lines, cursorX, cursorY, viewportStart } = snapshot;
     this.lines = [...lines];
     this.cursorX = cursorX;
     this.cursorY = cursorY;
+    if (viewportStart !== undefined) {
+      this.viewportStart = viewportStart;
+    }
+  }
+
+  private getMaxVisibleLines(): number {
+    const rows = process.stdout.rows || 24;
+    return rows - 1;
+  }
+
+  private getViewportEnd(): number {
+    return Math.min(
+      this.viewportStart + this.getMaxVisibleLines(),
+      this.lines.length
+    );
+  }
+
+  private scrollViewport() {
+    const maxVisibleLines = this.getMaxVisibleLines();
+    const viewportEnd = this.getViewportEnd();
+
+    if (this.cursorY < this.viewportStart) {
+      this.viewportStart = this.cursorY;
+    } else if (this.cursorY >= viewportEnd) {
+      this.viewportStart = this.cursorY - maxVisibleLines + 1;
+    }
+
+    this.viewportStart = Math.max(0, this.viewportStart);
+
+    const maxStart = Math.max(0, this.lines.length - maxVisibleLines);
+    this.viewportStart = Math.min(this.viewportStart, maxStart);
   }
 
   insertChar(char: string) {
@@ -54,8 +91,10 @@ export default class EditorState {
       this.lines[this.cursorY - 1] = prevLine + currentLine;
       this.lines.splice(this.cursorY, 1);
       this.cursorY--;
+      this.scrollViewport();
     }
   }
+
   insertNewLine() {
     const currentLine = this.lines[this.cursorY];
     const beforeCursor = currentLine?.slice(0, this.cursorX);
@@ -64,7 +103,9 @@ export default class EditorState {
     this.lines.splice(this.cursorY + 1, 0, afterCursor!);
     this.cursorY++;
     this.cursorX = 0;
+    this.scrollViewport();
   }
+
   moveCursor(direction: "up" | "down" | "left" | "right") {
     switch (direction) {
       case "up":
@@ -74,6 +115,7 @@ export default class EditorState {
             this.cursorX,
             this.lines[this.cursorY]!.length
           );
+          this.scrollViewport();
         }
         break;
       case "down":
@@ -83,6 +125,7 @@ export default class EditorState {
             this.cursorX,
             this.lines[this.cursorY]!.length
           );
+          this.scrollViewport();
         }
         break;
       case "left":
@@ -91,6 +134,7 @@ export default class EditorState {
         } else if (this.cursorY > 0) {
           this.cursorY--;
           this.cursorX = this.lines[this.cursorY]!.length;
+          this.scrollViewport();
         }
         break;
       case "right":
@@ -99,6 +143,7 @@ export default class EditorState {
         } else if (this.cursorY < this.lines.length - 1) {
           this.cursorY++;
           this.cursorX = 0;
+          this.scrollViewport();
         }
         break;
     }
@@ -136,18 +181,31 @@ export default class EditorState {
       );
     }
   }
+
   getCurrentDir() {
     return this.currentDir;
   }
+
   getLines() {
     return this.lines;
   }
+
   getCursor() {
     return { x: this.cursorX, y: this.cursorY };
   }
 
+  getViewport() {
+    return {
+      start: this.viewportStart,
+      end: this.getViewportEnd(),
+      maxVisibleLines: this.getMaxVisibleLines(),
+    };
+  }
+
   addTabSpace() {
-    this.lines[this.cursorY] += "   ";
-    this.cursorX += 3;
+    const line = this.lines[this.cursorY] || "";
+    this.lines[this.cursorY] =
+      line.slice(0, this.cursorX) + "    " + line.slice(this.cursorX);
+    this.cursorX += 4;
   }
 }

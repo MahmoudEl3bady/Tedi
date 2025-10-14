@@ -1,10 +1,8 @@
-import { stdin } from "node:process";
+import { cwd, stdin } from "node:process";
 import EditorState from "./EditorState.js";
 import { UndoManager } from "./undo.js";
 import { Renderer } from "./renderer.js";
 import { InputHandler } from "./inputHandler.js";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
 import { opendir } from "node:fs/promises";
 import fs from "node:fs";
 import { argv } from "node:process";
@@ -12,7 +10,7 @@ import readline from "readline";
 
 const renderer = new Renderer();
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = cwd();
 const openedFile = argv[2];
 const filePath = `${__dirname}/${openedFile}`;
 let fileLines: string[] = [];

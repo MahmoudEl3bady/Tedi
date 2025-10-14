@@ -6,34 +6,43 @@ export class Renderer {
   render(state: EditorState) {
     const lines = state.getLines();
     const cursor = state.getCursor();
+    const viewport = state.getViewport();
     const rows = stdout.rows || 24;
+    const maxLines = rows - 1;
+
+    const lineNumWidth = String(lines.length).length;
 
     // Save cursor position (in case we're rendering during filename prompt)
     stdout.write("\x1b[s");
 
-    // Instead, clear manually to preserve bottom line
+    // Clear the screen area
     stdout.write("\x1b[H");
-
-    const maxLines = rows - 1;
     for (let i = 0; i < maxLines; i++) {
       stdout.write("\x1b[2K");
       if (i < maxLines - 1) stdout.write("\n");
     }
 
-    // Go back to top
     stdout.write("\x1b[H");
 
-    // Draw text with line numbers (only up to maxLines)
-    const visibleLines = lines.slice(0, maxLines);
+    // Get visible lines from viewport
+    const visibleLines = lines.slice(viewport.start, viewport.end);
+
+    // Draw text with line numbers
     visibleLines.forEach((line, i) => {
-      const lineNum = styleText(["yellow"], `${i + 1} `);
+      const actualLineNum = viewport.start + i + 1;
+      const lineNumStr = String(actualLineNum).padStart(lineNumWidth, " ");
+      const lineNum = styleText(["yellow"], `${lineNumStr} `);
       stdout.write(lineNum + line);
       if (i < visibleLines.length - 1) stdout.write("\n");
     });
 
-    // Place cursor
-    const targetLine = cursor.y + 1;
-    const targetCol = cursor.x + `${cursor.y + 1} `.length + 1;
-    stdout.write(`\x1b[${targetLine};${targetCol}H`);
+    // Calculate cursor position relative to viewport
+    const displayLine = cursor.y - viewport.start + 1;
+    const displayCol = cursor.x + lineNumWidth + 2;
+
+    // Ensure cursor is within valid range
+    if (displayLine > 0 && displayLine <= maxLines) {
+      stdout.write(`\x1b[${displayLine};${displayCol}H`);
+    }
   }
 }
