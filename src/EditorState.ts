@@ -1,5 +1,6 @@
 import { getFilename, writeFileLineByLine } from "./utilities/utils.js";
 import { argv } from "node:process";
+import clipboard from "clipboardy";
 import path from "node:path";
 
 export default class EditorState {
@@ -76,6 +77,26 @@ export default class EditorState {
     this.lines[this.cursorY] =
       line?.slice(0, this.cursorX) + char + line?.slice(this.cursorX);
     this.cursorX++;
+  }
+
+  insertText() {
+    const text = clipboard.readSync();
+    const copiedTextLines = text.split("\n");
+    const width = process.stdout.columns;
+    const currentLineContent = this.lines[this.cursorY]?.slice(
+      0,
+      this.cursorX + 1
+    );
+    //TODO :split line if it bigger than window width.
+    const beforeCurr = this.lines.slice(0, this.cursorY);
+    beforeCurr.push(currentLineContent as string);
+    const afterCurr = this.lines.slice(this.cursorY + 1);
+    afterCurr.unshift(
+      this.lines[this.cursorY]?.slice(this.cursorX + 1) as string
+    );
+    this.lines = [...beforeCurr, ...copiedTextLines, ...afterCurr];
+    this.cursorY += copiedTextLines.length;
+    this.scrollViewport();
   }
 
   deleteChar() {

@@ -5,6 +5,9 @@ export class UndoManager {
   private redoStack: any[] = [];
 
   save(state: EditorState): void {
+    if (this.undoStack.length > 100) {
+      this.undoStack.shift();
+    }
     this.undoStack.push(state.snapshot);
     this.redoStack = [];
   }

@@ -1,6 +1,4 @@
 import fs from "node:fs";
-import { stdin, stdout } from "node:process";
-import readline from "node:readline";
 
 export function debounce(fn: any, time: number) {
   let timer: any;

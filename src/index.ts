@@ -1,4 +1,4 @@
-import { cwd, stdin } from "node:process";
+import { cwd, stdin, stdout } from "node:process";
 import EditorState from "./EditorState.js";
 import { UndoManager } from "./undo.js";
 import { Renderer } from "./renderer.js";
@@ -49,6 +49,7 @@ renderer.render(editor);
 
 stdin.on("data", (data) => {
   const char = data.toString();
+
   if (char === "\x03") process.exit(0); // Ctrl+C
   inputHandler.handle(char);
 });
