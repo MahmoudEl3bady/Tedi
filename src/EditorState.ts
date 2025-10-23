@@ -89,11 +89,7 @@ export default class EditorState {
     );
     //TODO :split line if it bigger than window width.
     const beforeCurr = this.lines.slice(0, this.cursorY);
-    beforeCurr.push(currentLineContent as string);
     const afterCurr = this.lines.slice(this.cursorY + 1);
-    afterCurr.unshift(
-      this.lines[this.cursorY]?.slice(this.cursorX + 1) as string
-    );
     this.lines = [...beforeCurr, ...copiedTextLines, ...afterCurr];
     this.cursorY += copiedTextLines.length;
     this.scrollViewport();

@@ -15,6 +15,10 @@ export class InputHandler {
     )
   ) {}
 
+  handlePasting() {
+    this.editor.insertText();
+    this.undoManager.save(this.editor);
+  }
   handle(char: string) {
     if (this.isCapturingFilename) {
       return;
@@ -27,7 +31,7 @@ export class InputHandler {
       "\x1A": () => this.undoManager.undo(this.editor),
       "\x19": () => this.undoManager.redo(this.editor),
       "\x13": () => this.handleSave(), // Ctrl+S
-      "\x10": () => this.editor.insertText(),
+      "\x10": () => this.handlePasting(),
       "\x1B[A": () => this.editor.moveCursor("up"),
       "\x1B[B": () => this.editor.moveCursor("down"),
       "\x1B[C": () => this.editor.moveCursor("right"),
