@@ -31,43 +31,65 @@ export function writeFileLineByLine(filePath: string, lines: string[]) {
   });
 }
 
-export async function getFilename(): Promise<string> {
+function getCursorPosition(): Promise<{ row: number; col: number }> {
   return new Promise((resolve) => {
-    const rows = process.stdout.rows || 24;
+    let response = "";
 
-    // Save current cursor position
-    process.stdout.write("\x1b[s");
+    const onData = (data: Buffer) => {
+      response += data.toString();
+      const match = response.match(/\x1b\[(\d+);(\d+)R/);
+      if (match) {
+        process.stdin.removeListener("data", onData);
+        resolve({ row: parseInt(match[1]!), col: parseInt(match[2]!) });
+      }
+    };
 
+    process.stdin.on("data", onData);
+    process.stdout.write("\x1b[6n");
+
+    setTimeout(() => {
+      process.stdin.removeListener("data", onData);
+      resolve({ row: 1, col: 1 });
+    }, 100);
+  });
+}
+
+export async function getFilename(): Promise<string> {
+  const rows = process.stdout.rows || 24;
+
+  // Temporarily capture cursor position response
+  const originalListeners = process.stdin.listeners("data");
+  process.stdin.removeAllListeners("data");
+
+  const savedPosition = await getCursorPosition();
+
+  // Restore listeners
+  originalListeners.forEach((listener) => {
+    process.stdin.on("data", listener as any);
+  });
+
+  return new Promise((resolve) => {
     // Move to bottom and clear line
     process.stdout.write(`\x1b[${rows};1H`);
     process.stdout.write("\x1b[2K");
 
     // Display prompt with reverse colors
-    process.stdout.write("\x1b[7m");
-    process.stdout.write("Save as: ");
-
-    process.stdout.write("\x1b[0m");
+    process.stdout.write("\x1b[7mSave as: \x1b[0m");
 
     let filename = "";
-
-    // Store original data listener
-    const originalListeners = process.stdin.listeners("data");
 
     // Remove all existing listeners temporarily
     process.stdin.removeAllListeners("data");
 
-    // Add our filename input listener
     const handleInput = (key: Buffer) => {
       const char = key.toString();
 
-      // Enter - submit
       if (char === "\r" || char === "\n") {
         cleanup();
         resolve(filename.trim());
         return;
       }
 
-      // Backspace
       if (char === "\x7f" || char === "\x08") {
         if (filename.length > 0) {
           filename = filename.slice(0, -1);
@@ -76,7 +98,6 @@ export async function getFilename(): Promise<string> {
         return;
       }
 
-      // Escape or Ctrl+C - cancel
       if (char === "\x1b" || char === "\x03") {
         cleanup();
         resolve("");
@@ -99,11 +120,84 @@ export async function getFilename(): Promise<string> {
       });
 
       // Clear bottom line
-      process.stdout.write(`\x1b[${rows};1H`);
-      process.stdout.write("\x1b[2K");
+      process.stdout.write(`\x1b[${rows};1H\x1b[2K`);
 
-      // Restore cursor position
-      process.stdout.write("\x1b[u");
+      // Restore to saved position
+      process.stdout.write(`\x1b[${savedPosition.row};${savedPosition.col}H`);
+    }
+  });
+}
+
+export async function getSearchQuery(): Promise<string> {
+  const rows = process.stdout.rows || 24;
+
+  // Temporarily capture cursor position response
+  const originalListeners = process.stdin.listeners("data");
+  process.stdin.removeAllListeners("data");
+
+  const savedPosition = await getCursorPosition();
+
+  // Restore listeners
+  originalListeners.forEach((listener) => {
+    process.stdin.on("data", listener as any);
+  });
+
+  return new Promise((resolve) => {
+    // Move to bottom and clear line
+    process.stdout.write(`\x1b[${rows};1H`);
+    process.stdout.write("\x1b[2K");
+
+    // Display prompt with reverse colors
+    process.stdout.write("\x1b[7mSearch: \x1b[0m");
+
+    let query = "";
+
+    // Remove all existing listeners temporarily
+    process.stdin.removeAllListeners("data");
+
+    const handleInput = (key: Buffer) => {
+      const char = key.toString();
+
+      if (char === "\r" || char === "\n") {
+        cleanup();
+        resolve(query.trim());
+        return;
+      }
+
+      if (char === "\x7f" || char === "\x08") {
+        if (query.length > 0) {
+          query = query.slice(0, -1);
+          process.stdout.write("\x08 \x08");
+        }
+        return;
+      }
+
+      if (char === "\x1b" || char === "\x03") {
+        cleanup();
+        resolve("");
+        return;
+      }
+
+      if (char >= " " && char <= "~") {
+        query += char;
+        process.stdout.write(char);
+      }
+    };
+
+    process.stdin.on("data", handleInput);
+
+    function cleanup() {
+      process.stdin.removeListener("data", handleInput);
+
+      originalListeners.forEach((listener) => {
+        process.stdin.on("data", listener as any);
+      });
+
+      // Clear bottom line
+      process.stdout.write(`\x1b[${rows};1H\x1b[2K`);
+
+      // Restore to saved position
+      process.stdout.write(`\x1b[${savedPosition.row};${savedPosition.col}H`);
     }
   });
 }

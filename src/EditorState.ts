@@ -1,4 +1,8 @@
-import { getFilename, writeFileLineByLine } from "./utilities/utils.js";
+import {
+  getFilename,
+  getSearchQuery,
+  writeFileLineByLine,
+} from "./utilities/utils.js";
 import { argv } from "node:process";
 import clipboard from "clipboardy";
 import path from "node:path";
@@ -173,12 +177,11 @@ export default class EditorState {
       this.fileName = argv[2];
     }
 
-    if (!this.fileName) {
-      this.fileName = await getFilename();
-    }
-    filePath = path.join(currentDir, this.fileName);
-
     try {
+      if (!this.fileName) {
+        this.fileName = await getFilename();
+      }
+      filePath = path.join(currentDir, this.fileName);
       writeFileLineByLine(filePath, this.lines);
 
       const rows = process.stdout.rows || 24;
@@ -199,6 +202,22 @@ export default class EditorState {
     }
   }
 
+  async showSearchResults() {
+    try {
+      const query = await getSearchQuery();
+      const results = new Map<number, number[]>();
+      for (let i = 0; i < this.lines.length; i++) {
+        const line = this.lines[i];
+        if (line!.toLocaleLowerCase().includes(query.toLowerCase())) {
+          const queryIndex = line!.indexOf(query.toLocaleLowerCase());
+          results.set(i + 1, [queryIndex, queryIndex + query.length - 1]);
+        }
+      }
+      return results;
+    } catch (error: any) {
+      console.error("Error in showing search results!", error.message);
+    }
+  }
   getCurrentDir() {
     return this.currentDir;
   }

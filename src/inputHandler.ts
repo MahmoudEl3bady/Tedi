@@ -31,7 +31,8 @@ export class InputHandler {
       "\x1A": () => this.undoManager.undo(this.editor),
       "\x19": () => this.undoManager.redo(this.editor),
       "\x13": () => this.handleSave(), // Ctrl+S
-      "\x10": () => this.handlePasting(),
+      "\x10": () => this.showSearchResults(),
+      // "\x10": () => this.handlePasting(),
       "\x1B[A": () => this.editor.moveCursor("up"),
       "\x1B[B": () => this.editor.moveCursor("down"),
       "\x1B[C": () => this.editor.moveCursor("right"),
@@ -60,5 +61,11 @@ export class InputHandler {
       this.isCapturingFilename = false;
       this.renderer.render(this.editor);
     }
+  }
+  async showSearchResults() {
+    try {
+      const searchResults = await this.editor.showSearchResults();
+      console.log("searchResults:=>", searchResults);
+    } catch (error) {}
   }
 }
