@@ -9,8 +9,8 @@ import path from "node:path";
 
 export default class EditorState {
   private lines: string[] = [""];
-  private cursorX: number;
-  private cursorY: number;
+  cursorX: number;
+  cursorY: number;
   private currentDir: string = "";
   private fileName: string = "";
   private viewportStart: number = 0;
@@ -86,11 +86,6 @@ export default class EditorState {
   insertText() {
     const text = clipboard.readSync();
     const copiedTextLines = text.split("\n");
-    const width = process.stdout.columns;
-    const currentLineContent = this.lines[this.cursorY]?.slice(
-      0,
-      this.cursorX + 1
-    );
     //TODO :split line if it bigger than window width.
     const beforeCurr = this.lines.slice(0, this.cursorY);
     const afterCurr = this.lines.slice(this.cursorY + 1);
@@ -202,22 +197,6 @@ export default class EditorState {
     }
   }
 
-  async showSearchResults() {
-    try {
-      const query = await getSearchQuery();
-      const results = new Map<number, number[]>();
-      for (let i = 0; i < this.lines.length; i++) {
-        const line = this.lines[i];
-        if (line!.toLocaleLowerCase().includes(query.toLowerCase())) {
-          const queryIndex = line!.indexOf(query.toLocaleLowerCase());
-          results.set(i + 1, [queryIndex, queryIndex + query.length - 1]);
-        }
-      }
-      return results;
-    } catch (error: any) {
-      console.error("Error in showing search results!", error.message);
-    }
-  }
   getCurrentDir() {
     return this.currentDir;
   }
@@ -228,6 +207,10 @@ export default class EditorState {
 
   getCursor() {
     return { x: this.cursorX, y: this.cursorY };
+  }
+  setCursor(x: number, y: number) {
+    this.cursorY = y;
+    this.cursorX = x;
   }
 
   getViewport() {

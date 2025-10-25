@@ -15,7 +15,6 @@ export class UndoManager {
   get peak() {
     return this.undoStack.at(-1);
   }
-  // TODO: Undo only work with input text. and not working with e.g pasted text.z
   undo(state: EditorState) {
     if (this.undoStack.length === 0) return;
     const snapshot = this.undoStack.pop();

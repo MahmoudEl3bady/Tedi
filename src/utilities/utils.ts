@@ -10,7 +10,6 @@ export function debounce(fn: any, time: number) {
     }, time);
   };
 }
-// Move back, space, move back
 export function writeFileLineByLine(filePath: string, lines: string[]) {
   const writableStream = fs.createWriteStream(filePath);
 
