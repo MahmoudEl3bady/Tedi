@@ -3,10 +3,12 @@ import type { Renderer } from "./renderer.js";
 import type { UndoManager } from "./undo.js";
 import { debounce, getSearchQuery } from "./utilities/utils.js";
 import { SearchManager } from "./SearchManager.js";
+
 export class InputHandler {
   private isCapturingFilename = false;
   isSearchMode = false;
   searchManager = new SearchManager();
+
   constructor(
     private editor: EditorState,
     private undoManager: UndoManager,
@@ -15,12 +17,16 @@ export class InputHandler {
       () => this.undoManager.save(this.editor),
       500
     )
-  ) {}
+  ) {
+    // Connect search manager to renderer
+    this.renderer.setSearchManager(this.searchManager);
+  }
 
   handlePasting() {
     this.editor.insertText();
     this.undoManager.save(this.editor);
   }
+
   handle(char: string) {
     if (this.isCapturingFilename) {
       return;
@@ -33,12 +39,11 @@ export class InputHandler {
       "\x1A": () => this.undoManager.undo(this.editor),
       "\x19": () => this.undoManager.redo(this.editor),
       "\x13": () => this.handleSave(), // Ctrl+S
-      "\x06": () => this.handleSearch(), // Ctrl-F
-      "\x10": () => this.handlePasting(), //Ctrl-P
+      "\x06": () => this.handleSearch(), // Ctrl+F
+      "\x10": () => this.handlePasting(), // Ctrl+P
+      "\x1B": () => this.exitSearchMode(), // ESC - exit search
       "\x1B[A": () => this.editor.moveCursor("up"),
-      "\x1B[B": () => {
-        this.editor.moveCursor("down");
-      },
+      "\x1B[B": () => this.editor.moveCursor("down"),
       "\x1B[C": () => this.editor.moveCursor("right"),
       "\x1B[D": () => this.editor.moveCursor("left"),
     };
@@ -46,6 +51,9 @@ export class InputHandler {
     if (keyBindings[char]) {
       keyBindings[char]!();
     } else if (char.charCodeAt(0) >= 32 && char.charCodeAt(0) < 127) {
+      if (this.isSearchMode) {
+        this.exitSearchMode();
+      }
       this.editor.insertChar(char);
       this.debouncedSave();
     }
@@ -57,7 +65,7 @@ export class InputHandler {
 
   toggleEnterButton() {
     if (this.isSearchMode) {
-      this.findNext();
+      this.findNextMatch();
     } else {
       this.editor.insertNewLine();
     }
@@ -74,23 +82,37 @@ export class InputHandler {
       this.renderer.render(this.editor);
     }
   }
+
   private async handleSearch() {
     const query = await getSearchQuery();
     if (query) {
-      this.searchManager.search(this.editor.getLines(), query);
-      const firstMatch = this.searchManager.getMatches()[0];
-      if (firstMatch) {
+      const lines = this.editor.getLines();
+      this.searchManager.search(lines, query);
+      const matches = this.searchManager.getMatches();
+
+      if (matches.length > 0) {
+        const firstMatch = matches[0]!;
         this.editor.cursorY = firstMatch.line;
         this.editor.cursorX = firstMatch.col;
+        this.isSearchMode = true;
       }
     }
-    this.isSearchMode = true;
     this.renderer.render(this.editor);
   }
-  findNext() {
+
+  findNextMatch() {
     const match = this.searchManager.nextMatch();
-    this.editor.cursorY = match!.line;
-    this.editor.cursorX = match!.col;
+    if (match) {
+      this.editor.cursorY = match.line;
+      this.editor.cursorX = match.col;
+      this.renderer.render(this.editor);
+    }
+  }
+
+  private exitSearchMode() {
+    this.isSearchMode = false;
+    this.searchManager.clear();
+    this.renderer.setSearchManager(null);
     this.renderer.render(this.editor);
   }
 }
