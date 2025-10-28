@@ -31,16 +31,14 @@ export class Renderer {
 
     stdout.write("\x1b[H");
 
-    // Get visible lines from viewport
-    const visibleLines = lines.slice(viewport.start, viewport.end);
+    let visibleLines = lines.slice(viewport.start, viewport.end);
+    const displayedLines = this.highlightKeywords(visibleLines);
 
-    // Draw text with line numbers and highlighting
-    visibleLines.forEach((line, i) => {
+    displayedLines.forEach((line, i) => {
       const actualLineNum = viewport.start + i + 1;
       const lineNumStr = String(actualLineNum).padStart(lineNumWidth, " ");
       const lineNum = styleText(["yellow"], `${lineNumStr} `);
 
-      // Highlight search matches if in search mode
       const highlightedLine = this.highlightSearchMatches(
         line,
         viewport.start + i
@@ -50,11 +48,9 @@ export class Renderer {
       if (i < visibleLines.length - 1) stdout.write("\n");
     });
 
-    // Calculate cursor position relative to viewport
     const displayLine = cursor.y - viewport.start + 1;
     const displayCol = cursor.x + lineNumWidth + 2;
 
-    // Ensure cursor is within valid range
     if (displayLine > 0 && displayLine <= maxLines) {
       stdout.write(`\x1b[${displayLine};${displayCol}H`);
     }
@@ -98,5 +94,76 @@ export class Renderer {
     result += line.slice(lastIndex);
 
     return result;
+  }
+  private highlightKeywords(lines: string[]) {
+    const controlKeywords = new Set([
+      "if",
+      "else",
+      "for",
+      "while",
+      "return",
+      "break",
+      "continue",
+      "switch",
+      "case",
+      "default",
+      "try",
+      "catch",
+      "throw",
+      "finally",
+      "of",
+    ]);
+
+    const declarationKeywords = new Set([
+      "function",
+      "const",
+      "let",
+      "var",
+      "class",
+      "import",
+      "export",
+      "from",
+      "new",
+      "this",
+      "async",
+      "await",
+      "typeof",
+      "void",
+    ]);
+
+    const valueKeywords = new Set([
+      "true",
+      "false",
+      "null",
+      "undefined",
+      "number",
+      "string",
+      "boolean",
+    ]);
+
+    const newLines = lines.map((line) => {
+      if (line.includes("//")) {
+        return styleText(["gray"], line);
+      } else
+        return line
+          .split(/\b/) // split by word boundaries
+          .map((word) => {
+            if (controlKeywords.has(word)) {
+              return styleText(
+                ["red", "magenta", "magentaBright", "italic"],
+                word
+              );
+            } else if (declarationKeywords.has(word)) {
+              return styleText(["blue", "cyan", "blueBright"], word);
+            } else if (valueKeywords.has(word)) {
+              return styleText(["yellow", "green", "yellowBright"], word);
+            } else {
+              return word;
+            }
+          })
+          .join("");
+    });
+
+    return newLines;
   }
 }
