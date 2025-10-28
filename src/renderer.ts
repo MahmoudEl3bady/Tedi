@@ -16,7 +16,6 @@ export class Renderer {
     const viewport = state.getViewport();
     const rows = stdout.rows || 24;
     const maxLines = rows - 1;
-
     const lineNumWidth = String(lines.length).length;
 
     // Save cursor position
@@ -99,64 +98,193 @@ export class Renderer {
     const controlKeywords = new Set([
       "if",
       "else",
-      "for",
-      "while",
-      "return",
-      "break",
-      "continue",
+      "elif",
       "switch",
       "case",
       "default",
+      "for",
+      "while",
+      "do",
+      "break",
+      "continue",
+      "return",
       "try",
       "catch",
-      "throw",
+      "except",
       "finally",
+      "throw",
+      "raise",
+      "in",
       "of",
+      "match",
     ]);
 
     const declarationKeywords = new Set([
       "function",
+      "def",
       "const",
       "let",
       "var",
       "class",
+      "struct",
+      "enum",
+      "typedef",
+      "interface",
       "import",
-      "export",
       "from",
+      "include",
+      "define",
+      "export",
+      "public",
+      "private",
+      "protected",
+      "static",
       "new",
       "this",
       "async",
       "await",
-      "typeof",
-      "void",
+      "lambda",
+      "yield",
     ]);
 
     const valueKeywords = new Set([
       "true",
       "false",
+      "True",
+      "False",
       "null",
+      "Null",
+      "None",
+      "nil",
       "undefined",
+      "NaN",
+      "int",
+      "float",
+      "double",
+      "char",
       "number",
-      "string",
+      "bool",
       "boolean",
+      "string",
+      "object",
+      "array",
+    ]);
+    const builtinAndDirectives = new Set([
+      "#include",
+      "#define",
+      "#if",
+      "#ifdef",
+      "#ifndef",
+      "#endif",
+      "#pragma",
+      "import",
+      "export",
+      "module",
+      "package",
+      "namespace",
+      "using",
+      "require",
+      "print",
+      "printf",
+      "println",
+      "input",
+      "len",
+      "range",
+      "map",
+      "filter",
+      "reduce",
+      "sort",
+      "sum",
+      "min",
+      "max",
+      "abs",
+      "round",
+      "type",
+      "open",
+      "close",
+      "read",
+      "write",
+      "int",
+      "float",
+      "str",
+      "bool",
+      "list",
+      "dict",
+      "set",
+      "tuple",
+      "array",
+      "object",
+      "Promise",
+      "async",
+      "await",
+      "eval",
+      "exec",
+      "typeof",
+      "instanceof",
+      "print",
+      "console",
+      "Math",
+      "Date",
+      "JSON",
+      "parseInt",
+      "parseFloat",
+      "String",
+      "Number",
+      "Boolean",
+      "Error",
+      "Exception",
+      "assert",
+      "del",
+      "pass",
+      "yield",
+      "super",
+      "self",
+      "this",
+      "new",
+      "extends",
+      "implements",
+      "interface",
+      "public",
+      "private",
+      "protected",
+      "static",
+      "final",
+      "abstract",
+      "override",
+      "synchronized",
+      "defer",
+      "go",
+      "panic",
+      "recover",
+      "clone",
+      "copy",
+      "sizeof",
+      "main",
+      "exit",
+      "breakpoint",
     ]);
 
     const newLines = lines.map((line) => {
-      if (line.includes("//")) {
-        return styleText(["gray"], line);
+      if (line.includes("//") || line.includes("#")) {
+        const commentStarter = line.indexOf("//");
+        const lineBig = line.slice(0, commentStarter);
+        let lineEnd = line.slice(commentStarter);
+        lineEnd = styleText(["gray"], lineEnd);
+
+        line = lineBig.concat(lineEnd);
+        return line;
       } else
         return line
           .split(/\b/) // split by word boundaries
           .map((word) => {
             if (controlKeywords.has(word)) {
-              return styleText(
-                ["red", "magenta", "magentaBright", "italic"],
-                word
-              );
+              return styleText(["red", "magenta", "magentaBright"], word);
             } else if (declarationKeywords.has(word)) {
               return styleText(["blue", "cyan", "blueBright"], word);
             } else if (valueKeywords.has(word)) {
               return styleText(["yellow", "green", "yellowBright"], word);
+            } else if (builtinAndDirectives.has(word)) {
+              return styleText(["green", "greenBright"], word);
             } else {
               return word;
             }

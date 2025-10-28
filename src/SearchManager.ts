@@ -1,21 +1,29 @@
+import { clean, stripAnsi } from "./utilities/utils.js";
+
 export class SearchManager {
   private query: string = "";
   private matches: Array<{ line: number; col: number }> = [];
   private currentMatchIndex: number = -1;
 
   search(lines: string[], query: string) {
-    this.query = query;
-    this.matches = [];
+    this.clear();
 
-    if (!query) return;
+    const q = (query ?? "").trim();
+    if (!q) return;
 
-    lines.forEach((line, lineNum) => {
-      let col = 0;
-      while ((col = line.indexOf(query, col)) !== -1) {
+    this.query = q;
+    const lowerQ = q.toLowerCase();
+
+    for (let lineNum = 0; lineNum < lines.length; lineNum++) {
+      const raw = stripAnsi(lines[lineNum]!);
+      const lowerLine = raw.toLowerCase();
+
+      let col = lowerLine.indexOf(lowerQ);
+      while (col !== -1) {
         this.matches.push({ line: lineNum, col });
-        col += query.length;
+        col = lowerLine.indexOf(lowerQ, col + lowerQ.length);
       }
-    });
+    }
 
     this.currentMatchIndex = this.matches.length > 0 ? 0 : -1;
   }

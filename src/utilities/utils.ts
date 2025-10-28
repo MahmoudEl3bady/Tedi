@@ -200,3 +200,8 @@ export async function getSearchQuery(): Promise<string> {
     }
   });
 }
+
+export const stripAnsi = (s: string) =>
+  s.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
+
+export const clean = (s: string) => stripAnsi(s).replace(/\s+/g, " ").trim();
