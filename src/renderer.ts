@@ -15,7 +15,7 @@ export class Renderer {
     const cursor = state.getCursor();
     const viewport = state.getViewport();
     const rows = stdout.rows || 24;
-    const maxLines = rows - 1;
+    const maxLines = rows - 2;
     const lineNumWidth = String(lines.length).length;
 
     // Save cursor position
@@ -46,6 +46,13 @@ export class Renderer {
       stdout.write(lineNum + highlightedLine);
       if (i < visibleLines.length - 1) stdout.write("\n");
     });
+
+    this.renderStatusBar(
+      state.getFilename(),
+      state.getCursor(),
+      state.getLines().length,
+      state.isModified()
+    );
 
     const displayLine = cursor.y - viewport.start + 1;
     const displayCol = cursor.x + lineNumWidth + 2;
@@ -293,5 +300,44 @@ export class Renderer {
     });
 
     return newLines;
+  }
+
+  private renderStatusBar(
+    fileName: string,
+    cursor: { x: number; y: number },
+    totalLines: number,
+    modified: boolean
+  ) {
+    const rows = stdout.rows || 24;
+    const cols = stdout.columns || 80;
+    const statusLine = rows - 1;
+
+    const modifiedIndicator = modified
+      ? styleText(["red", "bold"], " ●")
+      : styleText(["green"], " ●");
+    const fileSection = styleText(["cyan", "bold"], ` ${fileName}`);
+    const posSection = styleText(
+      ["yellow"],
+      ` ${cursor.y + 1}:${cursor.x + 1}`
+    );
+    const linesSection = styleText(["magenta"], ` ${totalLines} lines`);
+
+    const plainStatus = ` ${fileName} ${cursor.y + 1}:${
+      cursor.x + 1
+    } ${totalLines} lines `;
+    const padding = " ".repeat(Math.max(0, cols - plainStatus.length - 3));
+
+    const leftSide = `${modifiedIndicator}${fileSection}`;
+    const rightSide = `${posSection} │${linesSection} `;
+
+    stdout.write(`\x1b[${statusLine};1H`);
+
+    stdout.write("\x1b[2K");
+
+    stdout.write("\x1b[48;5;236m");
+    stdout.write(leftSide);
+    stdout.write(padding);
+    stdout.write(rightSide);
+    stdout.write("\x1b[0m");
   }
 }

@@ -14,6 +14,8 @@ export default class EditorState {
   private currentDir: string = "";
   private fileName: string = "";
   private viewportStart: number = 0;
+  private modified: boolean = false;
+  private savedLines: string[] = [];
 
   constructor(lines: string[], currentDir?: string) {
     this.lines = lines;
@@ -81,6 +83,7 @@ export default class EditorState {
     this.lines[this.cursorY] =
       line?.slice(0, this.cursorX) + char + line?.slice(this.cursorX);
     this.cursorX++;
+    this.modified = true;
   }
 
   insertText() {
@@ -108,6 +111,7 @@ export default class EditorState {
       this.lines.splice(this.cursorY, 1);
       this.cursorY--;
       this.scrollViewport();
+      this.modified = true;
     }
   }
 
@@ -120,6 +124,7 @@ export default class EditorState {
     this.cursorY++;
     this.cursorX = 0;
     this.scrollViewport();
+    this.modified = true;
   }
 
   moveCursor(direction: "up" | "down" | "left" | "right") {
@@ -185,6 +190,8 @@ export default class EditorState {
         `\x1b[32m✓ Saved to ${path.basename(filePath)}\x1b[0m`
       );
 
+      this.savedLines = [...this.lines];
+      this.modified = false;
       setTimeout(() => {
         process.stdout.write(`\x1b[${rows};1H\x1b[2K`);
       }, 2000);
@@ -220,7 +227,12 @@ export default class EditorState {
       maxVisibleLines: this.getMaxVisibleLines(),
     };
   }
-
+  isModified(): boolean {
+    return this.modified;
+  }
+  getFilename() {
+    return this.fileName;
+  }
   addTabSpace() {
     const line = this.lines[this.cursorY] || "";
     this.lines[this.cursorY] =
