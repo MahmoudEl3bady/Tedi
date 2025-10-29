@@ -1,7 +1,7 @@
 {
-  "name": "code-lite-engine",
+  "name": "Tedi",
   "version": "1.0.0",
-  "description": "",
+  "description": "A lightweight terminal text editor built with Node.js and Typescript",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
@@ -9,8 +9,14 @@
     "dev": "tsx src/index.ts"
   },
   "type": "module",
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "editor",
+    "terminal",
+    "text-editor",
+    "cli",
+    "typescript"
+  ],
+  "author": "Mahmoud Elabady",
   "license": "ISC",
   "packageManager": "pnpm@10.15.0",
   "devDependencies": {
