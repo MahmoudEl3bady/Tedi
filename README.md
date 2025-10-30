@@ -1,6 +1,6 @@
 # Tedi
 
-A terminal text editor I built to understand how editors work under the hood. It's written in Node.js and TypeScript and handles the basics of terminal-based editors.
+A terminal text editor I built to understand how editors work under the hood. It's built from scratch using Node.js and TypeScript and handles the basics of terminal-based editors.
 
 ## What It Does
 
@@ -29,43 +29,6 @@ A terminal text editor I built to understand how editors work under the hood. It
 - Current line and column
 - Total line count
 
-## Installation
-
-```bash
-git clone https://github.com/MahmoudEl3bady/tedi.git
-cd tedi
-pnpm install
-pnpm run dev <filename>
-```
-
-## Usage
-
-Open a file:
-
-```bash
-pnpm run dev myfile.txt
-```
-
-Start with a new file:
-
-```bash
-pnpm run dev
-```
-
-## Keyboard Shortcuts
-
-| Key    | Action                             |
-| ------ | ---------------------------------- |
-| Ctrl+S | Save                               |
-| Ctrl+F | Search                             |
-| Enter  | Next match (in search) or new line |
-| ESC    | Exit search                        |
-| Ctrl+Z | Undo                               |
-| Ctrl+Y | Redo                               |
-| Ctrl+P | Paste                              |
-| Ctrl+C | Quit                               |
-| Tab    | Insert spaces                      |
-
 ## How It's Built
 
 The project follows a simple MVC-like structure:
@@ -85,16 +48,53 @@ I wanted to understand:
 - How terminal applications work at a low level
 - Text editor architecture and state management
 - Real-time rendering and performance optimization
-- Working with ANSI escape sequences
+- How to build a challenging project from scratch without AI help and force my self to think in problems that i don't have any idea how to solve it.
+
+## Keyboard Shortcuts
+
+| Key    | Action                                 |
+| ------ | -------------------------------------- |
+| Ctrl+S | Save                                   |
+| Ctrl+F | Search                                 |
+| Enter  | Next match (in search mode) / new line |
+| ESC    | Exit search                            |
+| Ctrl+Z | Undo                                   |
+| Ctrl+Y | Redo                                   |
+| Ctrl+P | Paste                                  |
+| Ctrl+C | Quit                                   |
+| Tab    | Insert spaces                          |
+
+## Installation
+
+```bash
+git clone https://github.com/MahmoudEl3bady/tedi.git
+cd tedi
+pnpm install
+pnpm run dev <filename>
+```
+
+## Usage
+
+Open a file:
+
+```bash
+pnpm run dev test.js
+```
+
+Start with a new file:
+
+```bash
+pnpm run dev
+```
 
 ## Technical Details
 
 For implementation details, see [ARCHITECTURE.md](docs/Architecture.md). It covers:
 
+- The design patterns used
 - How viewport scrolling works
 - Search highlighting implementation
 - Syntax highlighting system
 - Undo/redo with snapshots
-- Performance optimizations
 
 ---

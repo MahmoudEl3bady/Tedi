@@ -15,7 +15,7 @@ export class Renderer {
     const cursor = state.getCursor();
     const viewport = state.getViewport();
     const rows = stdout.rows || 24;
-    const maxLines = rows - 2;
+    const maxLines = rows - 1;
     const lineNumWidth = String(lines.length).length;
 
     // Save cursor position
@@ -31,8 +31,9 @@ export class Renderer {
     stdout.write("\x1b[H");
 
     let visibleLines = lines.slice(viewport.start, viewport.end);
-    const displayedLines = this.highlightKeywords(visibleLines);
-
+    const displayedLines = this.searchManager?.hasMatches()
+      ? visibleLines
+      : this.highlightKeywords(visibleLines);
     displayedLines.forEach((line, i) => {
       const actualLineNum = viewport.start + i + 1;
       const lineNumStr = String(actualLineNum).padStart(lineNumWidth, " ");
@@ -285,13 +286,13 @@ export class Renderer {
           .split(/\b/) // split by word boundaries
           .map((word) => {
             if (controlKeywords.has(word)) {
-              return styleText(["red", "magenta", "magentaBright"], word);
+              return styleText(["magenta"], word);
             } else if (declarationKeywords.has(word)) {
-              return styleText(["blue", "cyan", "blueBright"], word);
+              return styleText(["cyan"], word);
             } else if (valueKeywords.has(word)) {
-              return styleText(["yellow", "green", "yellowBright"], word);
+              return styleText(["yellow"], word);
             } else if (builtinAndDirectives.has(word)) {
-              return styleText(["green", "greenBright"], word);
+              return styleText(["green"], word);
             } else {
               return word;
             }
@@ -325,7 +326,7 @@ export class Renderer {
     const plainStatus = ` ${fileName} ${cursor.y + 1}:${
       cursor.x + 1
     } ${totalLines} lines `;
-    const padding = " ".repeat(Math.max(0, cols - plainStatus.length - 3));
+    const padding = " ".repeat(Math.max(0, cols - plainStatus.length - 2));
 
     const leftSide = `${modifiedIndicator}${fileSection}`;
     const rightSide = `${posSection} │${linesSection} `;

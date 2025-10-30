@@ -56,7 +56,6 @@ function getCursorPosition(): Promise<{ row: number; col: number }> {
 export async function getFilename(): Promise<string> {
   const rows = process.stdout.rows || 24;
 
-  // Temporarily capture cursor position response
   const originalListeners = process.stdin.listeners("data");
   process.stdin.removeAllListeners("data");
 
@@ -77,7 +76,6 @@ export async function getFilename(): Promise<string> {
 
     let filename = "";
 
-    // Remove all existing listeners temporarily
     process.stdin.removeAllListeners("data");
 
     const handleInput = (key: Buffer) => {
@@ -136,7 +134,6 @@ export async function getSearchQuery(): Promise<string> {
 
   const savedPosition = await getCursorPosition();
 
-  // Restore listeners
   originalListeners.forEach((listener) => {
     process.stdin.on("data", listener as any);
   });
@@ -151,7 +148,6 @@ export async function getSearchQuery(): Promise<string> {
 
     let query = "";
 
-    // Remove all existing listeners temporarily
     process.stdin.removeAllListeners("data");
 
     const handleInput = (key: Buffer) => {

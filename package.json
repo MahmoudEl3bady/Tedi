@@ -1,7 +1,7 @@
 {
-  "name": "Tedi",
+  "name": "tedi",
   "version": "1.0.0",
-  "description": "A lightweight terminal text editor built with Node.js and Typescript",
+  "description": "A lightweight terminal text editor built from scratch with Node.js and Typescript",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
