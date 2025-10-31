@@ -2,6 +2,7 @@
 
 A terminal text editor I built to understand how editors work under the hood. It's built from scratch using Node.js and TypeScript and handles the basics of terminal-based editors.
 
+[![asciicast](https://asciinema.org/a/0Cz23DQVZjstIRYAeTnkr6gtr.svg)](https://asciinema.org/a/0Cz23DQVZjstIRYAeTnkr6gtr)
 ## What It Does
 
 **Text editing basics**
