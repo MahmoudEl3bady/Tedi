@@ -6,7 +6,10 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "type": "module",
   "keywords": [
@@ -21,9 +24,11 @@
   "packageManager": "pnpm@10.15.0",
   "devDependencies": {
     "@types/node": "^24.3.1",
+    "@vitest/ui": "^4.0.9",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^4.0.9"
   },
   "dependencies": {
     "clipboardy": "^5.0.0"

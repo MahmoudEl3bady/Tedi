@@ -72,7 +72,7 @@ I wanted to understand:
 git clone https://github.com/MahmoudEl3bady/tedi.git
 cd tedi
 pnpm install
-pnpm run dev <filename>
+pnpm dev <filename>
 ```
 
 ## Usage
@@ -80,13 +80,13 @@ pnpm run dev <filename>
 Open a file:
 
 ```bash
-pnpm run dev test.js
+pnpm dev test.js
 ```
 
 Start with a new file:
 
 ```bash
-pnpm run dev
+pnpm dev
 ```
 
 ## Technical Details
