@@ -1,8 +1,8 @@
-import EditorState from "./EditorState.js";
+import EditorState, { type Snapshot } from "./EditorState.js";
 
 export class UndoManager {
-  private undoStack: any[] = [];
-  private redoStack: any[] = [];
+  private undoStack: Snapshot[] = [];
+  private redoStack: Snapshot[] = [];
 
   save(state: EditorState): void {
     if (this.undoStack.length >= 100) {
@@ -16,15 +16,15 @@ export class UndoManager {
     return this.undoStack.at(-1);
   }
   undo(state: EditorState) {
-    if (this.undoStack.length === 0) return;
     const snapshot = this.undoStack.pop();
+    if (!snapshot) return;
     this.redoStack.push(state.snapshot);
     state.restore(snapshot);
   }
 
   redo(state: EditorState) {
-    if (this.redoStack.length === 0) return;
     const snapshot = this.redoStack.pop();
+    if (!snapshot) return;
     this.undoStack.push(state.snapshot);
     state.restore(snapshot);
   }

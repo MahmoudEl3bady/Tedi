@@ -7,6 +7,13 @@ import { argv } from "node:process";
 import clipboard from "clipboardy";
 import path from "node:path";
 
+export interface Snapshot {
+  lines: string[];
+  cursorX: number;
+  cursorY: number;
+  viewportStart: number;
+}
+
 export default class EditorState {
   private lines: string[] = [""];
   cursorX: number;
@@ -26,7 +33,7 @@ export default class EditorState {
     }
   }
 
-  get snapshot() {
+  get snapshot(): Snapshot {
     return {
       lines: [...this.lines],
       cursorX: this.cursorX,
@@ -35,12 +42,7 @@ export default class EditorState {
     };
   }
 
-  restore(snapshot: {
-    lines: string[];
-    cursorX: number;
-    cursorY: number;
-    viewportStart?: number;
-  }) {
+  restore(snapshot: Snapshot) {
     const { lines, cursorX, cursorY, viewportStart } = snapshot;
     this.lines = [...lines];
     this.cursorX = cursorX;
@@ -58,7 +60,7 @@ export default class EditorState {
   private getViewportEnd(): number {
     return Math.min(
       this.viewportStart + this.getMaxVisibleLines(),
-      this.lines.length
+      this.lines.length,
     );
   }
 
@@ -89,7 +91,8 @@ export default class EditorState {
   insertText() {
     const text = clipboard.readSync();
     const copiedTextLines = text.split("\n");
-    //TODO :split line if it bigger than window width.
+    // Long pasted lines no longer need splitting — the renderer now
+    // scrolls horizontally instead of requiring lines to fit the window.
     const beforeCurr = this.lines.slice(0, this.cursorY);
     const afterCurr = this.lines.slice(this.cursorY + 1);
     this.lines = [...beforeCurr, ...copiedTextLines, ...afterCurr];
@@ -98,14 +101,17 @@ export default class EditorState {
   }
 
   deleteChar() {
+    if (this.cursorY < 0 || this.cursorY >= this.lines.length) return;
+    const line = this.lines[this.cursorY] ?? "";
+
     if (this.cursorX > 0) {
-      const line = this.lines[this.cursorY] as string;
       this.lines[this.cursorY] =
         line.slice(0, this.cursorX - 1) + line.slice(this.cursorX);
       this.cursorX--;
+      this.modified = true;
     } else if (this.cursorY > 0) {
-      const currentLine = this.lines[this.cursorY];
-      const prevLine = this.lines[this.cursorY - 1] as string;
+      const currentLine = line;
+      const prevLine = this.lines[this.cursorY - 1] ?? "";
       this.cursorX = prevLine.length;
       this.lines[this.cursorY - 1] = prevLine + currentLine;
       this.lines.splice(this.cursorY, 1);
@@ -116,11 +122,11 @@ export default class EditorState {
   }
 
   insertNewLine() {
-    const currentLine = this.lines[this.cursorY];
-    const beforeCursor = currentLine?.slice(0, this.cursorX);
-    const afterCursor = currentLine?.slice(this.cursorX);
-    this.lines[this.cursorY] = beforeCursor!;
-    this.lines.splice(this.cursorY + 1, 0, afterCursor!);
+    const currentLine = this.lines[this.cursorY] ?? "";
+    const beforeCursor = currentLine.slice(0, this.cursorX);
+    const afterCursor = currentLine.slice(this.cursorX);
+    this.lines[this.cursorY] = beforeCursor;
+    this.lines.splice(this.cursorY + 1, 0, afterCursor);
     this.cursorY++;
     this.cursorX = 0;
     this.scrollViewport();
@@ -128,24 +134,27 @@ export default class EditorState {
   }
 
   moveCursor(direction: "up" | "down" | "left" | "right") {
+    // Guard against cursorY drifting out of bounds (e.g. after a restore())
+    // instead of trusting non-null assertions on this.lines[this.cursorY].
+    if (this.cursorY < 0 || this.cursorY >= this.lines.length) {
+      this.cursorY = Math.max(0, Math.min(this.cursorY, this.lines.length - 1));
+    }
+    const currentLineLength = this.lines[this.cursorY]?.length ?? 0;
+
     switch (direction) {
       case "up":
         if (this.cursorY > 0) {
           this.cursorY--;
-          this.cursorX = Math.min(
-            this.cursorX,
-            this.lines[this.cursorY]!.length
-          );
+          const lineLength = this.lines[this.cursorY]?.length ?? 0;
+          this.cursorX = Math.min(this.cursorX, lineLength);
           this.scrollViewport();
         }
         break;
       case "down":
         if (this.cursorY < this.lines.length - 1) {
           this.cursorY++;
-          this.cursorX = Math.min(
-            this.cursorX,
-            this.lines[this.cursorY]!.length
-          );
+          const lineLength = this.lines[this.cursorY]?.length ?? 0;
+          this.cursorX = Math.min(this.cursorX, lineLength);
           this.scrollViewport();
         }
         break;
@@ -154,12 +163,12 @@ export default class EditorState {
           this.cursorX--;
         } else if (this.cursorY > 0) {
           this.cursorY--;
-          this.cursorX = this.lines[this.cursorY]!.length;
+          this.cursorX = this.lines[this.cursorY]?.length ?? 0;
           this.scrollViewport();
         }
         break;
       case "right":
-        if (this.cursorX < this.lines[this.cursorY]!.length) {
+        if (this.cursorX < currentLineLength) {
           this.cursorX++;
         } else if (this.cursorY < this.lines.length - 1) {
           this.cursorY++;
@@ -187,7 +196,7 @@ export default class EditorState {
       const rows = process.stdout.rows || 24;
       process.stdout.write(`\x1b[${rows};1H\x1b[2K`);
       process.stdout.write(
-        `\x1b[32m✓ Saved to ${path.basename(filePath)}\x1b[0m`
+        `\x1b[32m✓ Saved to ${path.basename(filePath)}\x1b[0m`,
       );
 
       this.savedLines = [...this.lines];
@@ -199,7 +208,7 @@ export default class EditorState {
       const rows = process.stdout.rows || 24;
       process.stdout.write(`\x1b[${rows};1H\x1b[2K`);
       process.stdout.write(
-        `\x1b[31m✗ Error saving file: ${(error as Error).message}\x1b[0m`
+        `\x1b[31m✗ Error saving file: ${(error as Error).message}\x1b[0m`,
       );
     }
   }

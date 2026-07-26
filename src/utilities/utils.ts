@@ -15,19 +15,23 @@ export function writeFileLineByLine(filePath: string, lines: string[]) {
 
   writableStream.on("error", (error) => {
     console.log(
-      `An error occured while writing to the file. Error: ${error.message}`
+      `An error occured while writing to the file. Error: ${error.message}`,
     );
   });
-  lines.map((line) => {
-    writableStream.write(`${line}\n`);
+
+  // "finish" fires once, after end() and once all buffered writes have
+  // flushed — this is the correct signal that the write actually succeeded.
+  // (Previously this was nested inside "close", registered after end() was
+  // called from inside "close" itself, which is out of order and could
+  // silently skip the success message.)
+  writableStream.on("finish", () => {
+    console.log(`All your lines have been written to ${filePath}`);
   });
 
-  writableStream.on("close", () => {
-    writableStream.end();
-    writableStream.on("finish", () => {
-      console.log(`All your lines have been written to ${filePath}`);
-    });
-  });
+  for (const line of lines) {
+    writableStream.write(`${line}\n`);
+  }
+  writableStream.end();
 }
 
 function getCursorPosition(): Promise<{ row: number; col: number }> {

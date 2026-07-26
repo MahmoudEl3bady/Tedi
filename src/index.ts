@@ -1,43 +1,30 @@
-import { cwd, stdin, stdout } from "node:process";
+import { cwd, stdin } from "node:process";
 import EditorState from "./EditorState.js";
 import { UndoManager } from "./undo.js";
 import { Renderer } from "./renderer.js";
 import { InputHandler } from "./inputHandler.js";
-import { opendir } from "node:fs/promises";
 import fs from "node:fs";
 import { argv } from "node:process";
-import readline from "readline";
 
 const renderer = new Renderer();
 
 const __dirname = cwd();
 const openedFile = argv[2];
 const filePath = `${__dirname}/${openedFile}`;
-let fileLines: string[] = [];
 
-const isFileExists = async (dirname: string) => {
-  const dir = await opendir(dirname);
-  for await (const dirent of dir) {
-    if (dirent.name === openedFile) {
-      return true;
-    }
-  }
-  return false;
+const readFileLines = (path: string): string[] => {
+  if (!fs.existsSync(path)) return [""];
+  const content = fs.readFileSync(path, "utf8");
+  // split on \r\n or \n; keep at least one empty line for an empty file
+  const lines = content.split(/\r\n|\n/);
+  if (content.length > 0 && lines[lines.length - 1] === "") lines.pop();
+  return lines.length > 0 ? lines : [""];
 };
 
-if (openedFile && (await isFileExists(__dirname))) {
-  const r1 = readline.createInterface({
-    input: fs.createReadStream(filePath),
-    crlfDelay: Infinity,
-  });
+const fileLines: string[] = openedFile ? readFileLines(filePath) : [""];
 
-  r1.on("line", (line) => {
-    fileLines.push(line);
-    renderer.render(editor);
-  });
-} else {
-  fileLines = [""];
-}
+// Editor is fully constructed before anything touches it — no event-loop
+// timing to reason about, unlike the previous stream-based read.
 const editor = new EditorState(fileLines, __dirname);
 const undoManager = new UndoManager();
 const inputHandler = new InputHandler(editor, undoManager, renderer);
