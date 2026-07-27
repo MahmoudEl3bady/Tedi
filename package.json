@@ -2,7 +2,10 @@
   "name": "tedi",
   "version": "1.0.0",
   "description": "A lightweight terminal text editor built from scratch with Node.js and Typescript",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "bin": {
+    "tedi": "./dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
@@ -21,7 +24,7 @@
   ],
   "author": "Mahmoud Elabady",
   "license": "ISC",
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@11.17.0",
   "devDependencies": {
     "@types/node": "^24.3.1",
     "@vitest/ui": "^4.0.9",

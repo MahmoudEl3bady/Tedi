@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { cwd, stdin } from "node:process";
 import EditorState from "./EditorState.js";
 import { UndoManager } from "./undo.js";

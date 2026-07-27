@@ -75,6 +75,39 @@ pnpm install
 pnpm dev <filename>
 ```
 
+## CLI Installation
+
+Install tedi globally so you can run it from anywhere:
+
+```bash
+# Install the package globally
+npm install -g .
+
+# Or use pnpm
+pnpm install -g .
+```
+
+Now you can run the editor:
+
+```bash
+# Start with a new file
+tedi
+
+# Open an existing file
+tedi myfile.txt
+
+# Open with a relative or absolute path
+tedi ./src/index.ts
+```
+
+**Local development** — if you prefer not to install globally, run the compiled version locally:
+
+```bash
+pnpm build
+node dist/index.js
+node dist/index.js myfile.txt
+```
+
 ## Usage
 
 Open a file:
